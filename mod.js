@@ -1,5 +1,5 @@
 
-export function dump(obj, maxLevel=5) {
+export function dump(obj, {depth=6, enumerable=false, own=false}={}) {
     const style =
     '<style>' +
     '.nuxHtmlDump{' +
@@ -36,34 +36,38 @@ export function dump(obj, maxLevel=5) {
 
     return '<div class=nuxHtmlDump>' + style + valueToHtml(obj, 0) + '</div>';
 
-
-
     function valueToHtml(obj, level) {
         ++level;
-        if (level > maxLevel) return '...';
+        if (level > depth) return '...';
         switch (typeof obj) {
-            case 'string': return '<string>"'+obj+'"<string>';
-            case 'number': return '<number>'+obj+'<number>';
-            case 'boolean': return '<bool>'+obj+'<bool>';
-            case 'function': return '<function>function '+obj.name+'<function>';
-            case 'symbol': return '<symbol>'+obj.toString()+'<symbol>';
+            case 'string': return '<string>"'+encode(obj)+'"<string>';
+            case 'number': return '<number>'+encode(obj)+'<number>';
+            case 'boolean': return '<bool>'+encode(obj)+'<bool>';
+            case 'function': return '<function>function '+encode(obj.name)+'<function>';
+            case 'symbol': return '<symbol>'+encode(obj.toString())+'<symbol>';
             default:
-                if (obj === null || obj === undefined) return '<null>'+obj+'<null>';
+                if (obj == null) return '<null>'+obj+'<null>';
                 if (obj instanceof Date) return '<date>'+obj+'<date>';
                 if (Array.isArray(obj)) {
                     return '[' + obj.map(item => valueToHtml(item, level)).join(' , ') + ']';
                 }
-
                 if (objects.has(obj)) {
                     return '<a href="#'+objects.get(obj)+'">(circular)</a>';
                 }
-
                 const id = ('x'+Math.random()).replace('.','');
                 try {
                     objects.set(obj, id);
                 } catch {
                     return '? error ?';
                 }
+
+                const keys = {};
+                const ownKeys = enumerable ? Object.keys(obj) : Object.getOwnPropertyNames(obj);
+                for (let k of ownKeys) keys[k] = 1;
+                if (!own) {
+                    for (let k in obj) keys[k] = 1;
+                }
+
 
                 // table
                 var cols = objectIsTable(obj);
@@ -76,7 +80,8 @@ export function dump(obj, maxLevel=5) {
                         str += '<td>'+ encode(col);
                     }
                     str += '<tbody>';
-                    for (let [name, value] of Object.entries(obj)) {
+                    for (let name in keys) {
+                        let value = obj[name];
                         str += '<tr>';
                         str += '<td>'+ encode(name);
                         for (let col in cols) {
@@ -88,7 +93,10 @@ export function dump(obj, maxLevel=5) {
 
                 // object
                 let str = '<table id="'+id+'">';
-                for (let [name, value] of Object.entries(obj)) {
+                for (let name in keys) {
+                    let value = null;
+                    try { value = obj[name]; }
+                    catch (e) { value = '? error ?' }
                     str += '<tr>';
                     str += '<td>'+encode(name);
                     str += '<td>'+valueToHtml(value, level);
@@ -101,11 +109,18 @@ export function dump(obj, maxLevel=5) {
         const keys = {}; // cols
         let numProps = 0;;
         for (let prop in obj) {
-            ++numProps;
-            for (let key in obj[prop]) {
-                if (keys[key] === undefined) keys[key] = 0;
-                keys[key]++;
+            try {
+                if (typeof obj[prop] === 'string') return;
+                ++numProps;
+                for (let key in obj[prop]) {
+                    if (keys[key] === undefined) keys[key] = 0;
+                    keys[key]++;
+                }
+            } catch (e) {
+                console.log()
+                console.log(obj, e)
             }
+
         }
         if (numProps < 3) return; // just two rows
         if (Object.values(keys).length < 2) return; // not enough cols

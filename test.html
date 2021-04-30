@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang=en>
+    <meta charset=utf-8>
+    <title>dump.js test</title>
+<body>
+
+<div id=out></div>
+
+<script type=module>
+    /*
+    delete window.onmozfullscreenchange;
+    delete window.WebKitCSSMatrix;
+    delete window.SVGMatrix;
+    delete window.SVGPoint;
+    delete window.SVGPointList;
+    delete window.MutationEvent
+    delete window.HTMLMarqueeElement;
+    delete window.external;
+    delete window.applicationCache;
+    delete window.PluginArray
+    delete window.Plugin
+    delete window.ondevicelight
+    delete window.ondeviceproximity
+    delete window.onuserproximity
+    delete window.ScriptProcessorNode
+    delete window.PerformanceNavigation
+    delete window.PerformanceTiming
+    delete window.onmozfullscreenerror;
+    delete window.content;
+    delete HTMLElement.prototype.onmozfullscreenchange;
+    */
+
+    import {dump} from './mod.js';
+    window.xyz = '<img src onerror="alert(1)">';
+    out.innerHTML = dump( window , {depth:7, own:false});
+</script>
