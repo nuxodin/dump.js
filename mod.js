@@ -1,5 +1,5 @@
 
-export function dump(obj, {depth=6, enumerable=false, own=false}={}) {
+export function dump(obj, {depth=6, enumerable=false, own=false, order=false}={}) {
     const style =
     '<style>' +
     '.nuxHtmlDump{' +
@@ -38,22 +38,34 @@ export function dump(obj, {depth=6, enumerable=false, own=false}={}) {
 
     function valueToHtml(obj, level) {
         ++level;
-        if (level > depth) return '...';
         switch (typeof obj) {
             case 'string': return '<string>"'+encode(obj)+'"<string>';
             case 'number': return '<number>'+encode(obj)+'<number>';
             case 'boolean': return '<bool>'+encode(obj)+'<bool>';
-            case 'function': return '<function>function '+encode(obj.name)+'<function>';
             case 'symbol': return '<symbol>'+encode(obj.toString())+'<symbol>';
+            //case 'function': return '<function>function '+encode(obj.name)+'<function>';
             default:
+
+
+                if (typeof obj === 'function' && !isConstructor(obj)) {
+                    return '<function>function '+encode(obj.name)+'<function>';
+                }
+
+
                 if (obj == null) return '<null>'+obj+'<null>';
                 if (obj instanceof Date) return '<date>'+obj+'<date>';
-                if (Array.isArray(obj)) {
+
+
+                if (Array.isArray(obj) && obj !== Array.prototype) {
                     return '[' + obj.map(item => valueToHtml(item, level)).join(' , ') + ']';
                 }
                 if (objects.has(obj)) {
                     return '<a href="#'+objects.get(obj)+'">(circular)</a>';
                 }
+
+                // its an object
+                if (level > depth) return '...';
+
                 const id = ('x'+Math.random()).replace('.','');
                 try {
                     objects.set(obj, id);
@@ -61,11 +73,18 @@ export function dump(obj, {depth=6, enumerable=false, own=false}={}) {
                     return '? error ?';
                 }
 
-                const keys = {};
+
+                let keys = {};
                 const ownKeys = enumerable ? Object.keys(obj) : Object.getOwnPropertyNames(obj);
-                for (let k of ownKeys) keys[k] = 1;
+                for (let k of ownKeys) keys[k] = 'own';
                 if (!own) {
-                    for (let k in obj) keys[k] = 1;
+                    for (let k in obj) if (!keys[k]) keys[k] = 'inherited';
+                }
+                if (order) {
+                    let nKeys = {};
+                    const tmp = Object.keys(keys).sort();
+                    for (let k of tmp) nKeys[k] = keys[k];
+                    keys = nKeys;
                 }
 
 
@@ -99,6 +118,7 @@ export function dump(obj, {depth=6, enumerable=false, own=false}={}) {
                     catch (e) { value = '? error ?' }
                     str += '<tr>';
                     str += '<td>'+encode(name);
+                    if (keys[name] == 'inherited') str += ' <small>(inherited)</small>';
                     str += '<td>'+valueToHtml(value, level);
                 }
                 return str += '</table>';
@@ -117,8 +137,7 @@ export function dump(obj, {depth=6, enumerable=false, own=false}={}) {
                     keys[key]++;
                 }
             } catch (e) {
-                console.log()
-                console.log(obj, e)
+                //console.log(obj, e)
             }
 
         }
@@ -138,3 +157,20 @@ function encode(str){ // ttodo: does not escape " and '
         return '&#'+i.charCodeAt(0)+';';
     });
 }
+
+/* */
+function isConstructor(f) {
+    if (typeof f !== 'function') return false;
+    try {
+        Reflect.construct(String, [], f);
+    } catch (e) {
+        return false;
+    }
+    return true;
+}
+/**
+function isConstructor(obj) {
+    if (typeof f !== 'function') return false;
+    return !!obj.prototype && !!obj.prototype.constructor.name;
+}
+/* */
