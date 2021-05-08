@@ -1,16 +1,17 @@
 <!DOCTYPE html>
 <html lang=en>
     <meta charset=utf-8>
+    <meta name="viewport" content="width=device-width">
     <title>dump.js test</title>
 <body>
 
 <div id=out></div>
+
 
 <script type=module>
 import 'https://cdn.jsdelivr.net/gh/nuxodin/cleanup.js@0.1.0/mod.min.js';
 import {dump} from './mod.js';
 
 
-
-out.innerHTML = dump( window , {depth:1, order:1, own:false});
+out.innerHTML = dump( HTMLStyleElement , {depth:2, order:0, own:false});
 </script>
