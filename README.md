@@ -1,4 +1,4 @@
-# dump.js
+# 🔍 dump.js
 
 inspect a object
 
