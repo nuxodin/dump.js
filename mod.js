@@ -46,33 +46,18 @@ export function dump(obj, {depth=6, enumerable=false, inherited=true, order=fals
             //case 'function': return '<function>function '+encode(obj.name)+'<function>';
             default:
 
-
-                if (typeof obj === 'function' && !isConstructor(obj)) {
-                    return '<function>function '+encode(obj.name)+'<function>';
-                }
-
-
+                if (typeof obj === 'function' && !isConstructor(obj)) return '<function>function '+encode(obj.name)+'<function>';
                 if (obj == null) return '<null>'+obj+'<null>';
                 if (obj instanceof Date) return '<date>'+obj+'<date>';
 
+                if (objects.has(obj)) return '<a href="#'+objects.get(obj)+'">(circular)</a>';
 
-                if (Array.isArray(obj) && obj !== Array.prototype) {
-                    return '[' + obj.map(item => valueToHtml(item, level)).join(' , ') + ']';
-                }
-                if (objects.has(obj)) {
-                    return '<a href="#'+objects.get(obj)+'">(circular)</a>';
-                }
-
-                // its an object
+                // its an object / array
                 if (level > depth) return '...';
 
                 const id = ('x'+Math.random()).replace('.','');
-                try {
-                    objects.set(obj, id);
-                } catch {
-                    return '? error ?';
-                }
-
+                try { objects.set(obj, id); }
+                catch { return '? error ?'; }
 
                 let keys = {};
                 const ownKeys = enumerable ? Object.keys(obj) : Object.getOwnPropertyNames(obj);
@@ -87,6 +72,8 @@ export function dump(obj, {depth=6, enumerable=false, inherited=true, order=fals
                     keys = nKeys;
                 }
 
+                let isArray = Array.isArray(obj) && obj !== Array.prototype;
+
 
                 // table
                 var cols = objectIsTable(obj);
@@ -94,34 +81,41 @@ export function dump(obj, {depth=6, enumerable=false, inherited=true, order=fals
                     let str = '<table id="'+id+'">';
                     str += '<thead>';
                     str += '<tr>';
-                    str += '<td> ';
+                    str += '<td><small>' + (isArray?'(items)':'(index)')+'</small>';
                     for (let col in cols) {
                         str += '<td>'+ encode(col);
                     }
                     str += '<tbody>';
                     for (let name in keys) {
+                        if (isArray && name==='length') continue;
                         let value = obj[name];
                         str += '<tr>';
-                        str += '<td>'+ encode(name);
+                        str += '<td>';
+                        str += encode(name) + (isArray ? ' = { ' : ' : { ');
                         for (let col in cols) {
-                            str += '<td>'+ valueToHtml(value[col], level);
+                            str += '<td>'
+                            str += (col in value) ? valueToHtml(value[col], level) : '<null>(not set)</null>';
                         }
                     }
                     return str += '</table>';
                 }
 
-                // object
-                let str = '<table id="'+id+'">';
-                for (let name in keys) {
-                    let value = null;
-                    try { value = obj[name]; }
-                    catch (e) { value = '? error ?' }
-                    str += '<tr>';
-                    str += '<td>'+encode(name);
-                    if (keys[name] == 'inherited') str += ' <small>(inherited)</small>';
-                    str += '<td>'+valueToHtml(value, level);
+                if (isArray) {
+                    return '[' + obj.map(item => valueToHtml(item, level)).join(' , ') + ']';
+                } else { // object
+                    // object
+                    let str = '<table id="'+id+'">';
+                    for (let name in keys) {
+                        let value = null;
+                        try { value = obj[name]; }
+                        catch (e) { value = '? error ?' }
+                        str += '<tr>';
+                        str += '<td>'+encode(name);
+                        if (keys[name] == 'inherited') str += ' <small>(inherited)</small>';
+                        str += '<td>'+valueToHtml(value, level);
+                    }
+                    return str += '</table>';
                 }
-                return str += '</table>';
         }
     }
 
@@ -139,7 +133,6 @@ export function dump(obj, {depth=6, enumerable=false, inherited=true, order=fals
             } catch (e) {
                 //console.log(obj, e)
             }
-
         }
         if (numProps < 3) return; // just two rows
         if (Object.values(keys).length < 2) return; // not enough cols
