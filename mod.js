@@ -1,5 +1,5 @@
 
-export function dump(obj, {depth=6, enumerable=false, own=false, order=false}={}) {
+export function dump(obj, {depth=6, enumerable=false, inherited=true, order=false}={}) {
     const style =
     '<style>' +
     '.nuxHtmlDump{' +
@@ -77,7 +77,7 @@ export function dump(obj, {depth=6, enumerable=false, own=false, order=false}={}
                 let keys = {};
                 const ownKeys = enumerable ? Object.keys(obj) : Object.getOwnPropertyNames(obj);
                 for (let k of ownKeys) keys[k] = 'own';
-                if (!own) {
+                if (inherited) {
                     for (let k in obj) if (!keys[k]) keys[k] = 'inherited';
                 }
                 if (order) {

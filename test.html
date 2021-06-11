@@ -9,9 +9,8 @@
 
 
 <script type=module>
-import 'https://cdn.jsdelivr.net/gh/nuxodin/cleanup.js@0.1.0/mod.min.js';
+import 'https://cdn.jsdelivr.net/gh/nuxodin/cleanup.js@1.1.0/mod.min.js';
 import {dump} from './mod.js';
 
-
-out.innerHTML = dump( HTMLStyleElement , {depth:2, order:0, own:false});
+out.innerHTML = dump( HTMLStyleElement , {depth:2, order:0, inherited:false});
 </script>
