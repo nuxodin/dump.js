@@ -3,7 +3,7 @@
 inspect a object
 
 - handles cyclic references
-- recognizes and displays similar objects in table form.
+- recognises and displays similar objects in tabular form
 
 # Ussage
 
