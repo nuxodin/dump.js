@@ -1,5 +1,5 @@
 
-export function dump(obj, {depth=6, enumerable=false, inherited=true, order=false}={}) {
+export function dump(obj, {depth=6, enumerable=false, inherited=true, order=false, customRender=false}={}) {
     const style =
     '<style>' +
     '.nuxHtmlDump{' +
