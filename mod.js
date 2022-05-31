@@ -38,6 +38,11 @@ export function dump(obj, {depth=6, enumerable=false, inherited=true, order=fals
 
     function valueToHtml(obj, level) {
         ++level;
+
+        if (customRender) {
+            const val = customRender(obj);
+            if (val != null) return val;
+        }
         switch (typeof obj) {
             case 'string': return '<string>"'+encode(obj)+'"<string>';
             case 'number': return '<number>'+encode(obj)+'<number>';
@@ -145,7 +150,7 @@ export function dump(obj, {depth=6, enumerable=false, inherited=true, order=fals
     }
 }
 
-function encode(str){ // ttodo: does not escape " and '
+export function encode(str){ // ttodo: does not escape " and '
     return (str+'').replace(/[\u00A0-\u9999<>\&]/gim, function(i) {
         return '&#'+i.charCodeAt(0)+';';
     });

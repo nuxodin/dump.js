@@ -11,7 +11,7 @@ inspect a object
 <script type=module>
   
 import {dump} from 'https://cdn.jsdelivr.net/gh/nuxodin/dump.js@1.2.0/mod.min.js';
-  
+
 document.body.innerHTML = dump(String, {depth:3, order:0, inherited:true});
   
 </script>
@@ -27,3 +27,4 @@ document.body.innerHTML = dump(String, {depth:3, order:0, inherited:true});
 **depth:** number, how deep do you like to inspect the object?  
 **order:** bool, alphabetical order of properties  
 **inherited:** bool, show inherited properties  
+**customRender:** a function that takes the current object and returns a string to show  
