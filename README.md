@@ -10,7 +10,7 @@ inspect a object
 ```html
 <script type=module>
   
-import {dump} from 'https://cdn.jsdelivr.net/gh/nuxodin/dump.js@1.2.0/mod.min.js';
+import {dump} from 'https://cdn.jsdelivr.net/gh/nuxodin/dump.js@1.2.1/mod.min.js';
 
 document.body.innerHTML = dump(String, {depth:3, order:0, inherited:true});
   
