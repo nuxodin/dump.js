@@ -21,5 +21,45 @@ function customRender(obj){
         return encode(obj.outerHTML.substring(0, 50))+"...";
     }
 }
+
 out.innerHTML = dump( document , {depth:2, order:0, inherited:true, customRender});
+
+//table
+const table = [
+    {name: "John", age: 25, city: "New York"},
+    {name: "Peter", age: 30, city: "Paris"},
+    {name: "Amy", age: 20, city: "London"},
+];
+
+out.innerHTML += '<h2>Table</h2>'+dump({table});
+
+
+// functions
+
+const functions = {};
+
+functions.normal = function normalName(a){}
+functions.async = async   function asyncName(a){} // space is important
+functions.generator = function * generatorName(a){}
+
+const arrowName = ()=>{};
+functions.arrow = arrowName;
+
+const asyncArrowName = async ()=>{};
+functions['async arrow'] = asyncArrowName;
+
+functions.class = class AAA {
+    constructor(a){
+        this.a = a;
+    }
+    getA(){
+        return this.a;
+    }
+}
+
+out.innerHTML += '<h2>functions</h2>'+dump(functions);
+
+
+
+
 </script>
