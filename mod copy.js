@@ -1,5 +1,5 @@
 
-export function dump(obj, {depth=6, enumerable=true, symbols=false, inherited=false, order=false, customRender=false}={}) {
+export function dump(obj, {depth=6, enumerable=false, inherited=true, symbols=false, order=false, customRender=false}={}) {
     const style =
     '<style>' +
     '.nuxHtmlDump{' +
@@ -27,7 +27,6 @@ export function dump(obj, {depth=6, enumerable=true, symbols=false, inherited=fa
     '.nuxHtmlDump null { color:#888; }' +
     '.nuxHtmlDump function { color:#88f; }' +
     '.nuxHtmlDump symbol { color:#f48; }' +
-    '.nuxHtmlDump :is(date, promise) { color:#1b8; }' +
     '.nuxHtmlDump thead {' +
     '   font-weight:bold;' +
     '}' +
@@ -54,13 +53,12 @@ export function dump(obj, {depth=6, enumerable=true, symbols=false, inherited=fa
         if (typeof obj === 'function' && !isConstructor(obj)) {
             const asStr = obj.toString();
             const arrow =  asStr[0]==='f' || asStr.replace(/\s+/g,' ').startsWith('async function') ? '' : 'arrow';
-            const async = obj[Symbol.toStringTag] === 'AsyncFunction' ? 'async' : '';
+            const async = obj[Symbol.toStringTag] === 'AsyncFunction' ? 'async ' : '';
             const generator = obj[Symbol.toStringTag] === 'GeneratorFunction' ? '*' : '';
-            return '<function>'+(async+' '+arrow+' '+generator+'function <b>').trim()+encode(obj.name)+'</b>('+obj.length+')<function>';
+            return '<function>'+async+' '+arrow+' '+generator+'function <b>'+encode(obj.name)+'</b>('+obj.length+')<function>';
         }
         if (obj == null) return '<null>'+obj+'<null>';
         if (obj instanceof Date) return '<date>'+obj+'<date>';
-        if (obj instanceof Promise) return '<promise>'+obj+'<promise>';
 
         if (objects.has(obj)) return '<a href="#'+objects.get(obj)+'">(circular)</a>';
 
@@ -71,10 +69,28 @@ export function dump(obj, {depth=6, enumerable=true, symbols=false, inherited=fa
         try { objects.set(obj, id); }
         catch { return '? error ?'; }
 
-        if (obj instanceof Map) obj = Object.fromEntries(obj);
-        if (obj instanceof Set) obj = [...obj];
-
-        const keys = propertiesOf(obj, {enumerable, inherited, symbols, order});
+        let keys = {};
+        const ownKeys = enumerable ? Object.keys(obj) : Object.getOwnPropertyNames(obj);
+        for (const k of ownKeys) keys[k] = 'own';
+        if (inherited) {
+            for (const k in obj) if (!keys[k]) keys[k] = 'inherited';
+        }
+        if (symbols) {
+            const ownSymbols = Object.getOwnPropertySymbols(obj);
+            for (const k of ownSymbols) {
+                Object.defineProperty(keys, k, {
+                    value: 'own',
+                    enumerable: true,
+                });
+//                keys[k] = 'own';
+            }
+        }
+        if (order) {
+            const nKeys = {};
+            const tmp = Object.keys(keys).sort();
+            for (const k of tmp) nKeys[k] = keys[k];
+            keys = nKeys;
+        }
 
         const isArray = Array.isArray(obj) && obj !== Array.prototype;
 
@@ -89,7 +105,7 @@ export function dump(obj, {depth=6, enumerable=true, symbols=false, inherited=fa
                 str += '<td>'+ encode(col);
             }
             str += '<tbody>';
-            for (const [name,] of keys) {
+            for (const name in keys) {
                 //if (isArray && name==='length') continue;
                 const value = obj[name];
                 if (name==='length' && typeof value === 'number') continue;
@@ -108,14 +124,13 @@ export function dump(obj, {depth=6, enumerable=true, symbols=false, inherited=fa
             return '[' + obj.map(item => valueToHtml(item, level)).join(' , ') + ']';
         } else { // object
             let str = '<table id="'+id+'">';
-            for (const [name, behavoir] of keys) {
+            for (const name in keys) {
                 let value = null;
                 try { value = obj[name]; }
                 catch { value = '? error ?' }
                 str += '<tr>';
                 str += '<td>'+encode(name);
-                if (behavoir.inherited) str += ' <small title=inherited>👨‍👦</small>';
-                if (!behavoir.enumerable) str += ' <small title="non-enumerable">🚫</small>';
+                if (keys[name] == 'inherited') str += ' <small>(inherited)</small>';
                 str += '<td>'+valueToHtml(value, level);
             }
             return str += '</table>';
@@ -150,9 +165,6 @@ export function dump(obj, {depth=6, enumerable=true, symbols=false, inherited=fa
 }
 
 export function encode(str){ // TODO: does not escape " and '
-    // check if str is a Symbol
-    if (typeof str === 'symbol') return '<symbol>'+str.toString()+'<symbol>';
-
     return (str+'').replace(/[\u00A0-\u9999<>\&]/gim, function(i) {
         return '&#'+i.charCodeAt(0)+';';
     });
@@ -169,48 +181,4 @@ function isConstructor(f) {
     //     return false;
     // }
     return true;
-}
-
-
-function propertiesOf(obj, {enumerable, symbols, inherited, order}) {
-    let keys = new Map();
-
-    if (obj instanceof Map) {
-        for (const [k, v] of obj) {
-            keys.set(k, {
-                own: true,
-                enumerable: true,
-            });
-        }
-        return keys;
-    }
-
-    Reflect.ownKeys(obj).forEach(k => {
-        const isEnumerable = Object.prototype.propertyIsEnumerable.call(obj, k);
-        if (!enumerable && !isEnumerable) return;
-        keys.set(k, {
-            own: true,
-            enumerable: isEnumerable,
-        });
-    });
-    if (inherited) {
-        const proto = Object.getPrototypeOf(obj);
-        if (proto && proto !== Object.prototype && proto !== Function.prototype && proto !== Array.prototype) {
-            const inheritedKeys = propertiesOf(proto, {enumerable, symbols, inherited, order});
-            for (const [k, v] of inheritedKeys) {
-                if (k === 'constructor') continue;
-                if (!keys.has(k)) {
-                    v.inherited = true;
-                    keys.set(k, v);
-                }
-            }
-        }
-    }
-    if (order) {
-        const nKeys = new Map();
-        const tmp = Array.from(keys.keys()).sort();
-        for (const k of tmp) nKeys.set(k, keys.get(k));
-        keys = nKeys;
-    }
-    return keys;
 }

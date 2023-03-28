@@ -23,7 +23,7 @@ function customRender(obj){
     }
 }
 
-out.innerHTML = dump( document , {depth:2, order:0, inherited:true, customRender});
+out.innerHTML = dump( document , {depth:2, order:false, inherited:true, customRender});
 
 //table
 const table = [
@@ -32,7 +32,7 @@ const table = [
     {name: "Amy", age: 20, city: "London"},
 ];
 
-out.innerHTML += '<h2>Table</h2>'+dump({table});
+out.innerHTML += '<h2>Table</h2>'+dump({table}, {depth:2, order:false, inherited:true});
 
 
 // functions
