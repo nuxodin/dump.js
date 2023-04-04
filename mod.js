@@ -35,7 +35,7 @@ export function dump(obj, {depth=6, enumerable=true, symbols=false, inherited=fa
 
     const objects = new WeakMap();
 
-    return '<div class=nuxHtmlDump>' + style + valueToHtml(obj, 0) + '</div>';
+    return `<div class=nuxHtmlDump>${style+valueToHtml(obj, 0)}</div>`;
 
     function valueToHtml(obj, level) {
         ++level;
@@ -45,10 +45,10 @@ export function dump(obj, {depth=6, enumerable=true, symbols=false, inherited=fa
             if (val != null) return val;
         }
         switch (typeof obj) {
-            case 'string': return '<string>"'+encode(obj)+'"<string>';
-            case 'number': return '<number>'+encode(obj)+'<number>';
-            case 'boolean': return '<bool>'+encode(obj)+'<bool>';
-            case 'symbol': return '<symbol>'+encode(obj.toString())+'<symbol>';
+            case 'string': return `<string>"${encode(obj)}"<string>`;
+            case 'number': return `<number>${encode(obj)}<number>`;
+            case 'boolean': return `<bool>${encode(obj)}<bool>`;
+            case 'symbol': return `<symbol>${encode(obj.toString())}<symbol>`;
         }
 
         if (typeof obj === 'function' && !isConstructor(obj)) {
@@ -141,9 +141,7 @@ export function dump(obj, {depth=6, enumerable=true, symbols=false, inherited=fa
         if (numProps < 3) return; // just two rows
         if (Object.values(keys).length < 2) return; // not enough cols
         for (const keyNum of Object.values(keys)) {
-            if (keyNum < numProps/2) { // not minimum half the keys in sub obj
-                return;
-            }
+            if (keyNum < numProps/2) return; // not minimum half the keys in sub obj
         }
         return keys;
     }
@@ -152,12 +150,10 @@ export function dump(obj, {depth=6, enumerable=true, symbols=false, inherited=fa
 export function encode(str){ // TODO: does not escape " and '
     // check if str is a Symbol
     if (typeof str === 'symbol') return '<symbol>'+str.toString()+'<symbol>';
-
     return (str+'').replace(/[\u00A0-\u9999<>\&]/gim, function(i) {
         return '&#'+i.charCodeAt(0)+';';
     });
 }
-
 
 function isConstructor(f) {
     if (typeof f !== 'function') return false;
@@ -176,7 +172,7 @@ function propertiesOf(obj, {enumerable, symbols, inherited, order}) {
     let keys = new Map();
 
     if (obj instanceof Map) {
-        for (const [k, v] of obj) {
+        for (const [k, _v] of obj) {
             keys.set(k, {
                 own: true,
                 enumerable: true,
