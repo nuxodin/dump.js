@@ -7,23 +7,12 @@
 
 <div id=out></div>
 
-
 <script type=module>
-//import 'https://cdn.jsdelivr.net/gh/nuxodin/cleanup.js@1.2.11/mod.min.js';
+
 import 'https://cdn.jsdelivr.net/gh/nuxodin/cleanup.js@1.2.11/mod.min.js';
-import {dump, encode} from './mod.js';
+import {dump, encode, domRender} from './mod.js';
 
-function customRender(obj){
-    let isElement = false;
-    try {
-        isElement = obj instanceof HTMLElement && obj.tagName;
-    } catch {}
-    if (isElement) {
-        return encode(obj.outerHTML.substring(0, 50))+"...";
-    }
-}
-
-out.innerHTML = dump( document , {depth:2, order:false, inherited:true, customRender});
+out.innerHTML = dump( document , {depth:2, order:false, inherited:true, customRender:domRender});
 
 //table
 const table = [

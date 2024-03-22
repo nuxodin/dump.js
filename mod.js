@@ -210,3 +210,16 @@ function propertiesOf(obj, {enumerable, symbols, inherited, order}) {
     }
     return keys;
 }
+
+
+export function domRender(obj){
+    let isElement = false;
+    let isText = false;
+    try {
+        isElement = obj instanceof window.Element && obj.tagName;
+        isText = obj instanceof window.Text;
+    } catch {}
+    if (isElement) return encode(obj.outerHTML).substring(0, 70).trim()+"...";
+    if (isText) return encode(obj.textContent).substring(0, 60).trim()+"... [TextNode]";
+}
+
