@@ -1,4 +1,9 @@
 
+/**
+ * @param {unknown} obj
+ * @param {{ depth?: number, enumerable?: boolean, symbols?: boolean, inherited?: boolean, order?: boolean, customRender?: ((value: unknown) => string | null | undefined) | false }} [options]
+ * @returns {string}
+ */
 export function dump(obj, {depth=6, enumerable=true, symbols=false, inherited=false, order=false, customRender=false}={}) {
     const style =
     '<style>' +
@@ -147,6 +152,10 @@ export function dump(obj, {depth=6, enumerable=true, symbols=false, inherited=fa
     }
 }
 
+/**
+ * @param {unknown} str
+ * @returns {string}
+ */
 export function encode(str){ // TODO: does not escape " and '
     // check if str is a Symbol
     if (typeof str === 'symbol') return '<symbol>'+str.toString()+'<symbol>';
@@ -212,6 +221,10 @@ function propertiesOf(obj, {enumerable, symbols, inherited, order}) {
 }
 
 
+/**
+ * @param {unknown} obj
+ * @returns {string | undefined}
+ */
 export function domRender(obj){
     let isElement = false;
     let isText = false;
