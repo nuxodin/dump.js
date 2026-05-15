@@ -1,11 +1,13 @@
 # 🔍 dump.js
 
-inspect a object
+Render a detailed HTML representation of any JavaScript value.
 
 - handles cyclic references
+- shows arrays, objects, maps, sets, dates, promises, functions and symbols
 - recognises and displays similar objects in tabular form
+- can include inherited, non-enumerable and symbol properties
 
-# Ussage
+# Usage
 
 ```html
 <script type=module>
@@ -24,7 +26,27 @@ document.body.innerHTML = dump(String, {depth:3, order:0, inherited:true});
 
 ## Arguments
 
-**depth:** number, how deep do you like to inspect the object?  
-**order:** bool, alphabetical order of properties  
-**inherited:** bool, show inherited properties  
-**customRender:** a function that takes the current object and returns a string to show  
+`dump(value, options)` returns an HTML string.
+
+**value:** any JavaScript value to render  
+**options.depth:** maximum nesting depth, defaults to `6`  
+**options.enumerable:** include enumerable properties, defaults to `true`  
+**options.symbols:** include symbol properties, defaults to `false`  
+**options.inherited:** include inherited properties, defaults to `false`  
+**options.order:** sort properties alphabetically, defaults to `false`  
+**options.callGetters:** call getters and render their returned value, defaults to `false`  
+**options.customRender:** function that receives the current value and may return custom HTML  
+
+```js
+dump(obj, {
+  depth: 3,
+  enumerable: true,
+  symbols: true,
+  inherited: true,
+  order: true,
+  callGetters: false,
+  customRender(value) {
+    if (value instanceof HTMLElement) return value.outerHTML;
+  },
+});
+```

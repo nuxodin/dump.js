@@ -1,4 +1,6 @@
 /**
+ * Render a detailed HTML representation of any JavaScript value.
+ *
  * @param {unknown} obj
  * @param {{ depth?: number, enumerable?: boolean, symbols?: boolean, inherited?: boolean, order?: boolean, callGetters?: boolean, customRender?: ((value: unknown) => string | null | undefined) | false }} [options]
  * @returns {string}
@@ -16,35 +18,33 @@ export function dump(
   } = {},
 ) {
   const style = "<style>" +
-    ".nuxHtmlDump{" +
-    "   background:#f8f8f8;" +
-    "   width:max-content;" +
-    "   font-size:12px;" +
-    "   color:black;" +
-    "   padding:4px;" +
-    "   border:1px solid;" +
-    "}" +
-    ".nuxHtmlDump table {" +
-    "   border-collapse:collapse;" +
-    "   display:inline-table;" +
-    "}" +
-    ".nuxHtmlDump table:target {" +
-    "   background:#ff0;" +
-    "}" +
-    ".nuxHtmlDump td {" +
-    "   vertical-align:top;" +
-    "   padding:1px 4px;" +
-    "   border:1px solid #0004;" +
-    "}" +
-    ".nuxHtmlDump number , .nuxHtmlDump bool { color:green; }" +
-    ".nuxHtmlDump string { color:#800; }" +
-    ".nuxHtmlDump null { color:#888; }" +
-    ".nuxHtmlDump function { color:#88f; }" +
-    ".nuxHtmlDump symbol { color:#f48; }" +
-    ".nuxHtmlDump accessor { color:#888; }" +
-    ".nuxHtmlDump :is(date, promise) { color:#1b8; }" +
-    ".nuxHtmlDump thead {" +
-    "   font-weight:bold;" +
+    "@scope (.nuxHtmlDump) {" +
+    "   :scope {" +
+    "      background:#f8f8f8;" +
+    "      width:max-content;" +
+    "      font-size:12px;" +
+    "      color:black;" +
+    "      padding:4px;" +
+    "      border:1px solid;" +
+    "   }" +
+    "   table {" +
+    "      border-collapse:collapse;" +
+    "      display:inline-table;" +
+    "      &:target { background:#ff0; }" +
+    "   }" +
+    "   td {" +
+    "      vertical-align:top;" +
+    "      padding:1px 4px;" +
+    "      border:1px solid #0004;" +
+    "   }" +
+    "   number, bool { color:green; }" +
+    "   string { color:#800; }" +
+    "   null { color:#888; }" +
+    "   function { color:#88f; }" +
+    "   symbol { color:#f48; }" +
+    "   accessor { color:#888; }" +
+    "   :is(date, promise) { color:#1b8; }" +
+    "   thead { font-weight:bold; }" +
     "}" +
     "</style>";
 
@@ -103,9 +103,7 @@ export function dump(
       str += "<thead>";
       str += "<tr>";
       str += "<td><small>" + (isArray ? "(items)" : "(index)") + "</small>";
-      for (const col in cols) {
-        str += "<td>" + encode(col);
-      }
+      for (const col in cols) str += "<td>" + encode(col);
       str += "<tbody>";
       for (const [name, behavoir] of keys) {
         //if (isArray && name==='length') continue;
@@ -120,11 +118,9 @@ export function dump(
         for (const col in cols) {
           str += "<td>";
           const cell = value.valueType === "value"
-            ? propertyValue(value.value, col)
-            : { valueType: "none" };
+            ? propertyValue(value.value, col) : { valueType: "none" };
           str += cell.valueType !== "none"
-            ? propertyValueToHtml(cell, level)
-            : "<null>(not set)</null>";
+            ? propertyValueToHtml(cell, level) : "<null>(not set)</null>";
         }
       }
       return str += "</table>";
