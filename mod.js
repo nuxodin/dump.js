@@ -1,10 +1,6 @@
 /* @ts-self-types="./mod.d.ts" */
 /**
  * Render a detailed HTML representation of any JavaScript value.
- *
- * @param {unknown} obj
- * @param {{ depth?: number, enumerable?: boolean, symbols?: boolean, inherited?: boolean, order?: boolean, callGetters?: boolean, customRender?: ((value: unknown) => string | null | undefined) | false }} [options]
- * @returns {string}
  */
 export function dump(
   obj,
@@ -322,9 +318,11 @@ export function domRender(obj) {
   let isElement = false;
   let isText = false;
   try {
-    isElement = obj instanceof window.Element && obj.tagName;
-    isText = obj instanceof window.Text;
-  } catch {}
+    isElement = obj instanceof globalThis.Element && obj.tagName;
+    isText = obj instanceof globalThis.Text;
+  } catch {
+    // The DOM globals may not exist in every runtime.
+  }
   if (isElement) return encode(obj.outerHTML).substring(0, 70).trim() + "...";
   if (isText) return encode(obj.textContent).substring(0, 60).trim() + "... [TextNode]";
 }
