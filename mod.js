@@ -1,3 +1,4 @@
+/* @ts-self-types="./mod.d.ts" */
 /**
  * Render a detailed HTML representation of any JavaScript value.
  *
