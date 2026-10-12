@@ -1,0 +1,20 @@
+{
+  "name": "@nuxodin/dump",
+  "version": "0.0.0",
+  "description": "Render a detailed HTML representation of any JavaScript value",
+  "type": "module",
+  "license": "MIT",
+  "author": "Tobias Buschor",
+  "types": "./mod.d.ts",
+  "exports": {
+    ".": "./mod.js"
+  },
+  "files": [
+    "mod.js",
+    "mod.d.ts"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nuxodin/dump.js"
+  }
+}

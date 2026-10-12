@@ -1,0 +1,72 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write # jsr + npm trusted publishing
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Version lesen
+        id: version
+        run: |
+          echo "name=$(jq -r '.name' deno.json)" >> $GITHUB_OUTPUT
+          echo "version=$(jq -r '.version' deno.json)" >> $GITHUB_OUTPUT
+
+      # Der Job läuft bei jedem Push auf main — die Registries entscheiden, ob es etwas zu tun gibt.
+      - name: Version schon auf jsr?
+        id: jsr
+        run: |
+          if curl -sf "https://jsr.io/${{ steps.version.outputs.name }}/${{ steps.version.outputs.version }}_meta.json" >/dev/null; then
+            echo "new=false" >> $GITHUB_OUTPUT
+          else
+            echo "new=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Tag + Release erstellen
+        if: steps.jsr.outputs.new == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          generate_release_notes: true
+
+      - uses: denoland/setup-deno@v2
+        if: steps.jsr.outputs.new == 'true'
+
+      - run: deno publish
+        if: steps.jsr.outputs.new == 'true'
+
+      - name: Version schon auf npm?
+        id: check
+        run: |
+          if npm view ${{ steps.version.outputs.name }}@${{ steps.version.outputs.version }} version >/dev/null 2>&1; then
+            echo "new=false" >> $GITHUB_OUTPUT
+          else
+            echo "new=true" >> $GITHUB_OUTPUT
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.check.outputs.new == 'true'
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: npm aktualisieren # OIDC braucht npm >= 11.5.1
+        if: steps.check.outputs.new == 'true'
+        run: npm install -g npm@latest
+
+      - name: Version aus deno.json übernehmen
+        if: steps.check.outputs.new == 'true'
+        run: npm version --no-git-tag-version --allow-same-version ${{ steps.version.outputs.version }}
+
+      - name: npm publish
+        if: steps.check.outputs.new == 'true'
+        run: npm publish --access public
